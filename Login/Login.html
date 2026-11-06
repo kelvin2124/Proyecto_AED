@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KEHO-Technology | Catálogo Completo de Electrónica y Servicios</title>
+  <link rel="stylesheet" href="Login.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="Img/Icono.png">
+  <style>
+    /* Estilos del Modal de Pedidos del Cliente */
+    .client-orders-modal-overlay {
+      display: none !important;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+    } 
+
+    .client-orders-modal-overlay.open {
+      display: flex !important;
+    }
+
+    .client-orders-card {
+      width: 92%;
+      max-width: 680px;
+      background: #0f172a;
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+    }
+
+    .client-orders-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .client-orders-summary-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(8, 13, 24, 0.8);
+      border: 1px solid var(--border-color);
+      padding: 0.85rem 1.2rem;
+      border-radius: var(--radius-md);
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .orders-history-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      padding-right: 4px;
+    }
+
+    .order-history-card {
+      background: #080d18;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.15rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      transition: border-color 0.2s;
+    }
+
+    .order-history-card:hover {
+      border-color: rgba(6, 182, 212, 0.4);
+    }
+
+    .order-top-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    .status-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+
+    .status-pill.Pendiente {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .status-pill.Preparacion {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .status-pill.Camino {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .status-pill.Entregado {
+      background: rgba(52, 211, 153, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .status-pill.Rechazada {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* Barra de progreso de 4 etapas */
+    .timeline-steps {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin: 1rem 0 0.5rem;
+    }
+
+    .timeline-steps::before {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 20px;
+      right: 20px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1;
+    }
+
+    .timeline-progress-bar {
+      position: absolute;
+      top: 14px;
+      left: 20px;
+      height: 3px;
+      background: var(--accent-cyan);
+      z-index: 2;
+      transition: width 0.35s ease;
+    }
+
+    .timeline-step {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      flex: 1;
+      text-align: center;
+    }
+
+    .step-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #0f172a;
+      border: 2px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all 0.25s;
+    }
+
+    .timeline-step.active .step-circle {
+      border-color: var(--accent-cyan);
+      background: var(--accent-cyan);
+      color: #080d18;
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.5);
+    }
+
+    .timeline-step.completed .step-circle {
+      border-color: #34d399;
+      background: #34d399;
+      color: #080d18;
+    }
+
+    .step-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      max-width: 80px;
+      line-height: 1.2;
+    }
+
+    .timeline-step.active .step-label {
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .btn-dropdown-option {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      padding: 0.65rem;
+      text-align: left;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-radius: var(--radius-sm);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .btn-dropdown-option:hover {
+      background: rgba(6, 182, 212, 0.12);
+      color: var(--accent-cyan);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-badge">K</div>
+        <div>
+          <span class="brand-title">KEHO<span class="brand-accent">-Technology</span></span>
+          <span class="brand-subtitle">Tecnología & Servicios Integrales</span>
+        </div>
+      </div>
+
+      <div class="search-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="searchInput" placeholder="Buscar iPhone, PS5, SSD, streaming, laptops...">
+      </div>
+
+      <div class="nav-actions">
+        <!-- BOTÓN DE MODO CLARO / OSCURO -->
+        <button type="button" class="theme-toggle-btn" id="themeToggleBtn" title="Cambiar fondo blanco/oscuro">
+          ☀️
+        </button>
+
+        <!-- BOTÓN DE FAVORITOS EN NAVBAR -->
+        <button class="cart-btn" id="openFavoritesBtn" aria-label="Ver Favoritos">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+          <span class="cart-count" id="favoritesCount" style="background: #ef4444; color: #fff;">0</span>
+        </button>
+
+        <div id="userArea" class="user-area-wrapper">
+          <a href="../Iniciar/Iniciar.html" class="btn btn-outline" id="openAuthBtn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Ingresar</a>
+        </div>
+
+        <button class="cart-btn" id="openCartBtn" aria-label="Ver carrito">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-container">
+        <div class="hero-tag">
+          <span class="dot"></span> Tu tienda de confianza en tecnología, hardware y entretenimiento
+        </div>
+        <h1>Equipos informáticos, consolas, repuestos y licencias oficiales</h1>
+        <p class="hero-desc">
+          Encuentra desde la última gama de smartphones y consolas PlayStation, hasta componentes para armar tu setup, cuentas oficiales de streaming y servicio técnico garantizado.
+        </p>
+        <div class="hero-features">
+          <div class="pill">Smartphones & iPhones</div>
+          <div class="pill">PlayStation 4 & 5</div>
+          <div class="pill">Componentes & Almacenamiento</div>
+          <div class="pill">Suscripciones Streaming</div>
+          <div class="pill">Taller Técnico</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Catálogo interactivo -->
+    <section class="catalog-section">
+      <div class="catalog-container">
+        <div class="catalog-header">
+          <div>
+            <h2>Catálogo General de Productos</h2>
+            <p>Filtra por categoría o usa el buscador superior para encontrar lo que necesitas</p>
+          </div>
+          <div class="filter-pills" id="filterContainer">
+            <button class="filter-btn active" data-category="todos">Todos</button>
+            <button class="filter-btn" data-category="iphones">iPhones</button>
+            <button class="filter-btn" data-category="celulares">Otros Celulares</button>
+            <button class="filter-btn" data-category="consolas">PlayStation</button>
+            <button class="filter-btn" data-category="computadoras">Computadoras</button>
+            <button class="filter-btn" data-category="almacenamiento">USB & Discos</button>
+            <button class="filter-btn" data-category="hardware">Memorias & Hardware</button>
+            <button class="filter-btn" data-category="audio">AirPods & Audio</button>
+            <button class="filter-btn" data-category="streaming">Streaming</button>
+            <button class="filter-btn" data-category="licencias">Licencias</button>
+            <button class="filter-btn" data-category="servicios">Servicios Técnicos</button>
+          </div>
+        </div>
+
+        <div class="grid-products" id="productsGrid"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div>
+        <div class="brand">
+          <div class="brand-badge small">K</div>
+          <span class="brand-title">KEHO<span class="brand-accent">-Technology</span></span>
+        </div>
+        <p class="footer-desc">Especialistas en venta de dispositivos electrónicos, soluciones de hardware, licencias y servicios digitales.</p>
+      </div>
+      <div>
+        <span class="footer-title">Centro de Atención</span>
+        <p>Lunes a Sábado: 8:00 AM - 4:00 PM</p>
+        <p>Ventas mayoristas y al detalle</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 KEHO-Technology. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <!-- Carrito Lateral -->
+  <div class="cart-overlay" id="cartOverlay">
+    <div class="cart-drawer">
+      <div class="cart-header">
+        <h3>Tu Carrito de Compra</h3>
+        <button class="modal-close" id="closeCartBtn">×</button>
+      </div>
+      <div class="cart-items" id="cartItemsList">
+        <p class="empty-cart-msg">Aún no has añadido productos.</p>
+      </div>
+      <div class="cart-footer">
+        <div class="cart-total-row">
+          <span>Total a cotizar / pagar:</span>
+          <span class="total-amount" id="cartTotalDisplay">$0.00</span>
+        </div>
+        <button class="btn btn-primary full" id="checkoutBtn">Tramitar Pedido Seguro</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Lateral de Favoritos -->
+  <div class="cart-overlay" id="favoritesOverlay">
+    <div class="cart-drawer">
+      <div class="cart-header">
+        <h3 style="display: flex; align-items: center; gap: 8px;">❤️ Mis Favoritos</h3>
+        <button class="modal-close" id="closeFavoritesBtn">×</button>
+      </div>
+      <div class="cart-items" id="favoritesItemsList">
+        <p class="empty-cart-msg">Aún no has guardado productos en favoritos.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Selección de Cantidad -->
+  <div class="qty-modal-overlay" id="qtyModal">
+    <div class="qty-modal-card" id="qtyModalCard">
+      <div class="qty-modal-header">
+        <h3>Añadir al Carrito</h3>
+        <button class="modal-close" id="closeQtyModalBtn">×</button>
+      </div>
+      <div class="qty-product-preview">
+        <img id="qtyProductImg" src="" alt="Producto">
+        <div class="qty-product-details">
+          <h4 id="qtyProductTitle">Título</h4>
+          <span class="qty-unit-price" id="qtyProductPrice">$0.00 c/u</span>
+          <span class="stock-badge" id="qtyStockBadge">Stock: 5 disponibles</span>
+        </div>
+      </div>
+
+      <div class="qty-selector-section">
+        <div class="qty-label-row">
+          <label for="qtyInput">Indica la cantidad deseada:</label>
+          <span class="qty-limit-note">Máx. permitido por orden</span>
+        </div>
+        <div class="qty-controls">
+          <button type="button" class="btn-qty" id="qtyMinusBtn">−</button>
+          <input type="number" id="qtyInput" value="1" min="1">
+          <button type="button" class="btn-qty" id="qtyPlusBtn">+</button>
+        </div>
+        <span class="qty-warning-text" id="qtyWarningText"></span>
+      </div>
+
+      <div class="qty-subtotal-row">
+        <span>Subtotal estimado:</span>
+        <span class="qty-subtotal-val" id="qtySubtotalDisplay">$0.00</span>
+      </div>
+
+      <div class="qty-modal-actions">
+        <button type="button" class="btn btn-outline" id="cancelQtyBtn">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="confirmAddQtyBtn">Confirmar y Añadir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Aviso de Inicio de Sesión Obligatorio -->
+  <div class="auth-required-modal-overlay" id="authRequiredModal">
+    <div class="auth-required-card">
+      <div class="auth-icon-circle">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <h3>Tienes que iniciar sesión para poder comprar</h3>
+      <p>Para añadir productos a tu orden y generar tu comprobante oficial en <strong>KEHO-Technology</strong>, ingresa a tu cuenta de cliente o continúa navegando.</p>
+      <div class="auth-required-actions">
+        <button type="button" class="btn btn-outline" id="closeAuthReqBtn">Solo seguir viendo</button>
+        <a href="../Iniciar/Iniciar.html" class="btn btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">Iniciar Sesión</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Pasarela y Confirmación de Pedido -->
+  <div class="checkout-modal-overlay" id="checkoutModal">
+    <div class="checkout-card">
+      <div class="checkout-header">
+        <div>
+          <h3>Confirmación de Pedido</h3>
+          <p class="checkout-subtitle">Verifica los detalles antes de enviar tu solicitud</p>
+        </div>
+        <button class="modal-close" id="closeCheckoutBtn">×</button>
+      </div>
+
+      <div class="checkout-content" id="checkoutContent">
+        <div class="buyer-info-box">
+          <div class="buyer-avatar" id="checkoutBuyerInitial">U</div>
+          <div class="buyer-details">
+            <span class="buyer-label">Facturar a nombre de:</span>
+            <strong class="buyer-name" id="checkoutBuyerName">Nombre Usuario</strong>
+            <span class="buyer-email" id="checkoutBuyerEmail">correo@ejemplo.com</span>
+          </div>
+        </div>
+
+        <div class="phone-validation-section">
+          <label for="checkoutPhoneInput">Número de Contacto / WhatsApp (Obligatorio)</label>
+          <div class="phone-input-wrapper">
+            <input type="tel" id="checkoutPhoneInput" placeholder="+505 8888-8888" maxlength="15">
+            <span class="phone-status-icon" id="phoneStatusIcon">⚪</span>
+          </div>
+          <small class="phone-helper" id="phoneHelper">Ingresa un número válido de 8 dígitos para coordinar tu entrega.</small>
+        </div>
+
+        <!-- Ubicación y Costo de Delivery -->
+        <div class="shipping-section" style="background: rgba(8, 13, 24, 0.6); border: 1px solid var(--border-color); padding: 0.85rem 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem;">
+          <span class="section-title">Datos de Entrega y Delivery:</span>
+          
+          <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+            <div>
+              <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Zona de Entrega:</label>
+              <select id="checkoutZoneSelect" style="width: 100%; background: #080d18; border: 1px solid var(--border-color); color: #fff; padding: 0.65rem; border-radius: var(--radius-sm); outline: none; font-size: 0.85rem;">
+                <option value="Managua" data-cost="3.00">Managua (Delivery Motorizado - $3.00)</option>
+                <option value="Departamentos" data-cost="5.00">Departamentos / Envíos Nacionales ($5.00)</option>
+                <option value="Tienda" data-cost="0.00">Retiro en Tienda Física (Gratis - $0.00)</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Dirección Domiciliar Exacta (Obligatoria):</label>
+              <input type="text" id="checkoutAddressInput" placeholder="Ej. Barrio El Edén, del puente 2c al lago..." style="width: 100%; background: #080d18; border: 1px solid var(--border-color); color: #fff; padding: 0.65rem; border-radius: var(--radius-sm); outline: none; font-size: 0.85rem;">
+            </div>
+
+            <div>
+              <label style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Punto de referencia:</label>
+              <input type="text" id="checkoutReferenceInput" placeholder="Ej. Casa verde frente a pulpería" style="width: 100%; background: #080d18; border: 1px solid var(--border-color); color: #fff; padding: 0.65rem; border-radius: var(--radius-sm); outline: none; font-size: 0.85rem;">
+            </div>
+          </div>
+        </div>
+
+        <div class="payment-method-section">
+          <span class="section-title">Forma de Pago o Coordinación:</span>
+          <div class="payment-options">
+            <label class="payment-option">
+              <input type="radio" name="payOption" value="Pago contra entrega" checked>
+              <span>💵 Pago contra entrega (Efectivo/Transferencia al recibir)</span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="payOption" value="Transferencia Bancaria Inmediata">
+              <span>💳 Transferencia Bancaria Inmediata</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="coupon-section">
+          <span class="section-title">¿Tienes un cupón de descuento?</span>
+          <div class="coupon-input-group">
+            <input type="text" id="couponInput" placeholder="Ej. KEHO10 o SUPERVIP">
+            <button type="button" class="btn btn-outline" id="applyCouponBtn">Aplicar</button>
+          </div>
+          <span class="coupon-feedback" id="couponFeedback"></span>
+        </div>
+
+        <div class="order-summary-box">
+          <span class="section-title">Artículos en la orden:</span>
+          <div class="order-items-scroll" id="checkoutItemsList"></div>
+        </div>
+
+        <div class="checkout-totals-box">
+          <div class="summary-line">
+            <span>Subtotal:</span>
+            <span id="checkoutSubtotalDisplay">$0.00</span>
+          </div>
+          <div class="summary-line" id="discountRow" style="display: none;">
+            <span style="color: var(--success-color);">Descuento aplicado:</span>
+            <span style="color: var(--success-color); font-weight: 700;" id="discountDisplay">-$0.00</span>
+          </div>
+          <div class="summary-line">
+            <span>Costo de Delivery:</span>
+            <span id="deliveryCostDisplay" style="color: var(--accent-cyan); font-weight: 700;">$3.00</span>
+          </div>
+          <div class="summary-line total">
+            <span>Total a Pagar:</span>
+            <div class="final-price-wrapper">
+              <span class="strikethrough-price" id="originalPriceDisplay" style="display: none;">$0.00</span>
+              <span class="checkout-final-total" id="checkoutTotalDisplay">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="checkout-actions">
+          <button type="button" class="btn btn-outline" id="cancelCheckoutBtn">Volver</button>
+          <button type="button" class="btn btn-primary" id="confirmOrderBtn" disabled>
+            <span class="btn-lock-icon" id="btnLockIcon">🔒</span> Enviar Solicitud de Pedido
+          </button>
+        </div>
+      </div>
+
+      <div class="checkout-processing" id="checkoutProcessing">
+        <div class="spinner"></div>
+        <h4>Enviando solicitud a nuestro equipo...</h4>
+        <p>Por favor espera un momento mientras registramos tu pedido.</p>
+      </div>
+
+      <!-- Pantalla de Éxito -->
+      <div class="checkout-success" id="checkoutSuccess">
+        <div class="success-icon-wrap" style="background: rgba(6, 182, 212, 0.15); border-color: var(--accent-cyan); color: var(--accent-cyan);">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <h3>¡Solicitud Enviada a Validación!</h3>
+        <p class="success-order-num">Número de orden: <strong id="successOrderCode">#KEHO-0000</strong></p>
+        <p class="success-msg">
+          Tu pedido está en estado <strong>Pendiente de Validación</strong>. Puedes consultar el progreso etapa por etapa en tiempo real desde tu perfil en "Mis Pedidos".
+        </p>
+        <div class="success-actions">
+          <button type="button" class="btn btn-primary full" id="finishSuccessBtn">Entendido y Continuar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Historial y Progreso de Pedidos del Cliente -->
+  <div class="client-orders-modal-overlay" id="clientOrdersModal">
+    <div class="client-orders-card">
+      <div class="client-orders-header">
+        <div>
+          <h3 style="color: #fff; font-size: 1.25rem;">Mis Pedidos & Compras</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">Monitorea el progreso de envío y descarga tus comprobantes.</p>
+        </div>
+        <button class="modal-close" id="closeClientOrdersBtn">×</button>
+      </div>
+
+      <div class="client-orders-summary-bar">
+        <div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Compras Aceptadas:</span>
+          <div style="font-size: 1.15rem; font-weight: 800; color: #34d399;" id="clientConfirmedCount">0 pedidos</div>
+        </div>
+        <div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Inversión Total Acumulada:</span>
+          <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent-cyan);" id="clientTotalSpent">$0.00</div>
+        </div>
+      </div>
+
+      <div class="orders-history-list" id="clientOrdersList">
+        <!-- Render dinámico de pedidos con la barra de etapas -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Logout -->
+  <div class="logout-modal-overlay" id="logoutModal">
+    <div class="logout-modal-card">
+      <div class="logout-icon-circle">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+      </div>
+      <h3 class="logout-modal-title">¿Cerrar sesión?</h3>
+      <p class="logout-modal-desc">Tu sesión en <strong>KEHO-Technology</strong> se cerrará en este dispositivo.</p>
+      <div class="logout-modal-actions">
+        <button type="button" class="btn btn-cancel-logout" id="cancelLogoutBtn">Cancelar</button>
+        <button type="button" class="btn btn-confirm-logout" id="confirmLogoutBtn">Cerrar Sesión</button>
+      </div>
+      <div class="logout-loading-state" id="logoutLoadingState">
+        <div class="spinner"></div>
+        <span>Cerrando sesión de forma segura...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="Login.js"></script>
+</body>
+</html>

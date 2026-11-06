@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso Seguro & Panel de Control | KEHO-Technology</title>
+  <link rel="stylesheet" href="../Login/Login.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* Estilos del Bloqueo de Acceso Admin */
+    .admin-auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 20%, rgba(6, 182, 212, 0.12) 0%, #050811 75%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999999;
+      padding: 1.5rem;
+    }
+
+    .admin-auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: #0f172a;
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem 2rem;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+      text-align: center;
+    }
+
+    .admin-shield-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: var(--accent-cyan);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem;
+    }
+
+    .admin-auth-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 0.35rem;
+    }
+
+    .admin-auth-subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .admin-login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+      text-align: left;
+    }
+
+    .admin-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .admin-field-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .admin-field-group input, 
+    .admin-field-group select,
+    .admin-field-group textarea {
+      width: 100%;
+      background: #080d18;
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      outline: none;
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .admin-field-group input:focus, 
+    .admin-field-group select:focus,
+    .admin-field-group textarea:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.25);
+    }
+
+    .admin-auth-error {
+      display: none;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #f87171;
+      padding: 0.65rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    /* Panel Autenticado */
+    .admin-app {
+      display: none;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+
+    .admin-app.authenticated {
+      display: flex;
+    }
+
+    .admin-container {
+      max-width: 1340px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      flex: 1;
+      width: 100%;
+    }
+
+    .admin-nav-tabs {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.85rem;
+    }
+
+    .tab-admin-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 0.65rem 1.25rem;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .tab-admin-btn.active {
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      color: #080d18;
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    .admin-section {
+      display: none;
+    }
+
+    .admin-section.active {
+      display: block;
+    }
+
+    .admin-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .admin-kpis {
+      display: flex;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 0.65rem 1.15rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .kpi-card strong {
+      color: var(--accent-cyan);
+      font-size: 1.05rem;
+    }
+
+    /* Barra de filtros y búsqueda */
+    .filter-search-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-md);
+      margin-bottom: 1.25rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .search-box-admin {
+      flex: 1;
+      max-width: 420px;
+      position: relative;
+    }
+
+    .search-box-admin input {
+      width: 100%;
+      background: #080d18;
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 0.6rem 0.85rem 0.6rem 2.2rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .search-box-admin input:focus {
+      border-color: var(--accent-cyan);
+    }
+
+    .search-box-admin svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .status-filter-pills {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .pill-filter-btn {
+      background: #080d18;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pill-filter-btn:hover {
+      color: #fff;
+      border-color: #334155;
+    }
+
+    .pill-filter-btn.active {
+      background: rgba(6, 182, 212, 0.15);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .table-responsive {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+    }
+
+    .orders-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .orders-table th, 
+    .orders-table td {
+      padding: 1.1rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      vertical-align: middle;
+    }
+
+    .orders-table th {
+      background: #080d18;
+      color: var(--accent-cyan);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .badge-status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+    }
+
+    .badge-status.Pendiente {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .badge-status.Confirmada {
+      background: rgba(52, 211, 153, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    .badge-status.Rechazada {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .badge-stock {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-stock.available {
+      background: rgba(52, 211, 153, 0.15);
+      color: #34d399;
+    }
+
+    .badge-stock.out {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-act {
+      padding: 0.48rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-whatsapp-direct {
+      background: #25D366;
+      color: #080d18;
+    }
+
+    .btn-whatsapp-direct:hover {
+      background: #20ba5a;
+    }
+
+    .btn-approve-order {
+      background: var(--accent-cyan);
+      color: #080d18;
+    }
+
+    .btn-cancel-order {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .item-bullet {
+      background: rgba(8, 13, 24, 0.75);
+      border: 1px solid var(--border-color);
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      display: block;
+      font-size: 0.76rem;
+    }
+
+    .input-table-edit {
+      background: #080d18;
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 0.4rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      outline: none;
+      width: 90px;
+    }
+
+    .input-table-edit:focus {
+      border-color: var(--accent-cyan);
+    }
+
+    .prod-mini-thumb {
+      width: 44px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .admin-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 1.5rem;
+    }
+
+    .admin-modal-overlay.open {
+      display: flex;
+    }
+
+    .admin-modal-card {
+      width: 100%;
+      max-width: 520px;
+      background: #0f172a;
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. Pantalla de Bloqueo por Contraseña -->
+  <div class="admin-auth-overlay" id="adminAuthOverlay">
+    <div class="admin-auth-card">
+      <div class="admin-shield-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+      </div>
+      <h2 class="admin-auth-title">Panel Administrativo</h2>
+      <p class="admin-auth-subtitle">Ingresa tus credenciales oficiales de KEHO-Technology</p>
+
+      <div class="admin-auth-error" id="adminAuthError">
+        Usuario o contraseña incorrectos.
+      </div>
+
+      <form id="adminLoginForm" class="admin-login-form" novalidate>
+        <div class="admin-field-group">
+          <label for="adminUser">Usuario o Correo de Administrador</label>
+          <input type="text" id="adminUser" placeholder="admin o correo autorizado" autocomplete="username" required>
+        </div>
+
+        <div class="admin-field-group">
+          <label for="adminPass">Contraseña de Acceso</label>
+          <input type="password" id="adminPass" placeholder="••••••••••••" autocomplete="current-password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary full" style="margin-top: 0.5rem; padding: 0.8rem;">
+          Desbloquear Panel
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Aplicación del Panel (Protegida) -->
+  <div class="admin-app" id="adminApp">
+    <header class="navbar">
+      <div class="nav-container">
+        <div class="brand">
+          <div class="brand-badge">K</div>
+          <div>
+            <span class="brand-title">KEHO<span class="brand-accent">-Admin</span></span>
+            <span class="brand-subtitle">Gestión Privada de Ventas & Inventario</span>
+          </div>
+        </div>
+        <div class="nav-actions">
+          <span style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600;">
+            Sesión: <strong style="color: var(--accent-cyan);">Administrador</strong>
+          </span>
+          <button type="button" class="btn btn-outline" id="adminLogoutBtn">
+            🔒 Salir del Panel
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-container">
+      <!-- Navegación por pestañas -->
+      <div class="admin-nav-tabs">
+        <button type="button" class="tab-admin-btn active" id="tabOrdersBtn">
+          📋 Solicitudes de Pedidos
+        </button>
+        <button type="button" class="tab-admin-btn" id="tabProductsBtn">
+          📦 Gestión de Inventario & Productos
+        </button>
+      </div>
+
+      <!-- SECCIÓN 1: PEDIDOS -->
+      <section class="admin-section active" id="sectionOrders">
+        <div class="admin-top-bar">
+          <div>
+            <h2>Solicitudes de Pedidos Recibidas</h2>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">Valida por WhatsApp antes de aprobar la compra oficial del cliente.</p>
+          </div>
+          <div class="admin-kpis">
+            <div class="kpi-card">Pedidos Totales: <strong id="totalOrdersCount">0</strong></div>
+            <div class="kpi-card">Pendientes: <strong id="pendingOrdersCount" style="color: #fbbf24;">0</strong></div>
+          </div>
+        </div>
+
+        <!-- Barra de herramientas: Filtro por estado y Buscador de órdenes -->
+        <div class="filter-search-toolbar">
+          <div class="search-box-admin">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="orderSearchInput" placeholder="Buscar por código (#KEHO), cliente, teléfono o zona...">
+          </div>
+
+          <div class="status-filter-pills" id="orderStatusFilters">
+            <button type="button" class="pill-filter-btn active" data-status="todos">Todos</button>
+            <button type="button" class="pill-filter-btn" data-status="Pendiente">Pendientes</button>
+            <button type="button" class="pill-filter-btn" data-status="Confirmada">Confirmadas</button>
+            <button type="button" class="pill-filter-btn" data-status="Rechazada">Rechazadas</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>ID / Fecha</th>
+                <th>Cliente y Contacto</th>
+                <th>Dirección y Zona</th>
+                <th>Productos Solicitados</th>
+                <th>Total & Método</th>
+                <th>Estado</th>
+                <th>Acción de Validación</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+              <!-- Render dinámico -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECCIÓN 2: GESTIÓN DE PRODUCTOS E INVENTARIO -->
+      <section class="admin-section" id="sectionProducts">
+        <div class="admin-top-bar">
+          <div>
+            <h2>Control de Productos en Catálogo</h2>
+            <p style="color: var(--text-muted); font-size: 0.88rem;">Modifica precios, existencias, fotos y datos, o añade nuevos artículos.</p>
+          </div>
+          <button type="button" class="btn btn-primary" id="openAddProductModalBtn">
+            + Añadir Nuevo Producto
+          </button>
+        </div>
+
+        <!-- Buscador de inventario -->
+        <div class="filter-search-toolbar">
+          <div class="search-box-admin" style="max-width: 460px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="productSearchInput" placeholder="Buscar producto por nombre o categoría...">
+          </div>
+          <span style="font-size: 0.82rem; color: var(--text-muted);" id="productsCountBadge">Cargando...</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th>Producto / Categoría</th>
+                <th>Precio ($ USD)</th>
+                <th>Stock / Existencias</th>
+                <th>Disponibilidad</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="productsTableBody">
+              <!-- Render dinámico desde Admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal para Añadir o Editar Producto -->
+  <div class="admin-modal-overlay" id="productModal">
+    <div class="admin-modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 id="productModalTitle" style="color: #fff; font-size: 1.2rem;">Añadir Nuevo Producto</h3>
+        <button class="modal-close" id="closeProductModalBtn" style="font-size: 1.4rem;">&times;</button>
+      </div>
+
+      <form id="productForm" class="admin-login-form">
+        <input type="hidden" id="editingProductId" value="">
+
+        <div class="admin-field-group">
+          <label for="prodName">Nombre del Producto</label>
+          <input type="text" id="prodName" placeholder="Ej. PlayStation 5 Pro (2TB)" required>
+        </div>
+
+        <div class="admin-field-group">
+          <label for="prodCategory">Categoría</label>
+          <select id="prodCategory" required>
+            <option value="iphones">iPhones</option>
+            <option value="celulares">Otros Celulares</option>
+            <option value="consolas">PlayStation</option>
+            <option value="computadoras">Computadoras</option>
+            <option value="almacenamiento">USB & Discos</option>
+            <option value="hardware">Memorias & Hardware</option>
+            <option value="audio">AirPods & Audio</option>
+            <option value="streaming">Streaming</option>
+            <option value="licencias">Licencias</option>
+            <option value="servicios">Servicios Técnicos</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <div class="admin-field-group" style="flex: 1;">
+            <label for="prodPrice">Precio ($ USD)</label>
+            <input type="number" id="prodPrice" step="0.01" min="1" placeholder="Ej. 450" required>
+          </div>
+          <div class="admin-field-group" style="flex: 1;">
+            <label for="prodStock">Stock Disponible</label>
+            <input type="number" id="prodStock" min="0" value="5" required>
+          </div>
+        </div>
+
+        <div class="admin-field-group">
+          <label for="prodImage">URL de la Imagen (Enlace Web)</label>
+          <input type="url" id="prodImage" placeholder="https://images.unsplash.com/..." required>
+        </div>
+
+        <div class="admin-field-group">
+          <label for="prodDesc">Descripción Corta</label>
+          <textarea id="prodDesc" rows="3" placeholder="Especificaciones principales del equipo..." required></textarea>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+          <button type="button" class="btn btn-outline" id="cancelProductBtn" style="flex: 1;">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="saveProductBtn" style="flex: 1;">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal para Rechazar Pedido con Motivo -->
+  <div class="admin-modal-overlay" id="rejectOrderModal">
+    <div class="admin-modal-card" style="max-width: 440px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="color: #f87171; font-size: 1.15rem; display: flex; align-items: center; gap: 6px;">
+          <span>✕</span> Rechazar Orden <span id="rejectOrderCodeBadge" style="color: #fff;"></span>
+        </h3>
+        <button class="modal-close" id="closeRejectModalBtn" style="font-size: 1.4rem;">&times;</button>
+      </div>
+
+      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.15rem;">
+        Indica el motivo de cancelación. Este mensaje se mostrará al cliente en su historial de compras para su información.
+      </p>
+
+      <form id="rejectOrderForm" class="admin-login-form">
+        <div class="admin-field-group">
+          <label for="rejectReasonSelect">Motivo Principal:</label>
+          <select id="rejectReasonSelect" required>
+            <option value="Dirección fuera de cobertura o zona de difícil acceso">Dirección fuera de cobertura / zona difícil</option>
+            <option value="Cliente no respondió a los mensajes de WhatsApp ni llamadas">Cliente no respondió WhatsApp ni llamadas</option>
+            <option value="Producto agotado temporalmente en bodega/proveedor">Producto agotado temporalmente en bodega</option>
+            <option value="Inconsistencia o error en los datos de facturación">Inconsistencia o error en los datos</option>
+            <option value="otro">Otro motivo (Especificar abajo)</option>
+          </select>
+        </div>
+
+        <div class="admin-field-group" id="customReasonWrapper" style="display: none;">
+          <label for="rejectCustomReason">Escribe el motivo detallado:</label>
+          <textarea id="rejectCustomReason" rows="3" placeholder="Escribe aquí la razón para el cliente..."></textarea>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem;">
+          <button type="button" class="btn btn-outline" id="cancelRejectBtn" style="flex: 1;">Volver</button>
+          <button type="submit" class="btn" style="flex: 1; background: #ef4444; color: #fff; font-weight: 700;">Confirmar Rechazo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Lateral de Favoritos -->
+<div class="cart-overlay" id="favoritesOverlay">
+  <div class="cart-drawer">
+    <div class="cart-header">
+      <h3 style="display: flex; align-items: center; gap: 8px;">❤️ Mis Favoritos</h3>
+      <button class="modal-close" id="closeFavoritesBtn">×</button>
+    </div>
+    <div class="cart-items" id="favoritesItemsList">
+      <p class="empty-cart-msg">Aún no has guardado productos en favoritos.</p>
+    </div>
+  </div>
+</div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="Admin.js"></script>
+</body>
+</html>
